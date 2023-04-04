@@ -1,4 +1,4 @@
-# Weather-Data-Visualization
+# Economic-Data-Visualization
 ## Project Description 
 The projects main goal will be to display visualizations utilising data from OpenWeatherMaps API. This will be achieved by creating an ETL Pipeline which extracts this data, saves it into AWS S3, a scalable storage infrastructure,cleans and transforms it, and finally displays dashboards based on this data. As a data orchestration tool, I will be using Airflow, and to better manage this infrastructure, Docker. Terraform will also be used to create AWS resources.
 ## Objectives 
