@@ -18,6 +18,12 @@ This data will be collected and overriden every day, and it will be automaticall
 ## User Requirements 
 This project will supply the user with data that is cleaned, and updated automatically every day. This data will be saved in a scalable storage, where the user can access and use it in any way they need.
 It will also display to the user different dashboards for the variable that they need, which they can use in any way that they need. 
+
+*	The files will need to be saved in csv format. There should not be any empty rows or cells. 
+*	Data should be updated every day.
+*	Data should be collected for: Stock Candles for the last 5 years.
+
+
 ## System Architecture
 * ### Environment
 The whole process will be orchestrated with Airflow, which will be set up using a docker container. The AWS services to be used will be created and managed with Terraform.
@@ -29,4 +35,10 @@ This now cleaned data will be used to create dashboards with google dashboards
 This is the structure of the pipeline. There will be one DAG, which is the ingestion dag. This dag will be responsible for ingesting, cleaning and storing the data, and it will have a task for each of these processes.
 Since we will be processing many different variables in parallel, we will be using task groups (a task group will belong to one variable, and it will contain the process described above).
 ## System Model
-![2023_04_05_01x_Kleki](https://user-images.githubusercontent.com/128420260/229942121-16fe3e6a-5eed-4a7c-bbd8-e0aa50558344.png)
+![image](https://user-images.githubusercontent.com/128420260/235433898-16577074-281f-4604-b278-3ddf1074f1e1.png)
+
+* The extract task, which will get data from the API in json format, convert it to csv, and store it in S3 storage, will be the first task. This is the API's raw, unfiltered data, which will subsequently be processed by the next task. This smaller process taking place inside the first extract task, is in itself an ETL process. 
+*	The raw data that is saved as csv files in S3 will be cleaned and turned into valid csv files with no redundant or empty rows as part of the transformation operation. Rows for certain time stamps that are vacant will be filled under particular conditions. Now, in our storage unit, these files will be kept in a different directory. The clean, usable data in this directory, transformed data, will be available for usage.
+*	Last but not least, the load phase will use the previously stated technique to import all of these files that were cleaned throughout the transformation process into the s3 bucket. The system will contact the user with information about any errors it encounters as an extra precaution to guarantee that the procedure proceeds without monitoring.
+
+
