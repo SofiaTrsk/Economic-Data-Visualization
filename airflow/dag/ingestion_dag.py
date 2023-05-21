@@ -6,6 +6,8 @@ from airflow.dag.utils.utils import economic_variables
 
 from airflow.dag.tasks.extract_from_api import extract_data_task
 
+from airflow.dag.tasks.copy_to_redshift import copy_to_redshift
+
 
 @dag(
 dag_id="economic_data_visualization_dag",
@@ -20,4 +22,4 @@ def economic_data_visualization_dag():
     for variable in economic_variables:
         @task_group(group_id=f"process_{variable}")
         def process_variable():
-            extract_files = extract_data_task()
+            extract_data_task(variable)>>copy_to_redshift()>>load_data_into_powerbi_task()
