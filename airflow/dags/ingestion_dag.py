@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from airflow.decorators import dag, task_group
+
 import logging
 from datetime import datetime
 
@@ -5,11 +9,18 @@ import pandas as pd
 import requests
 from airflow.decorators import task
 
-from airflow.dag.configs.configs import BASE_DIR, API_KEY, ACCESS_KEY, SECRET_KEY
+from airflow.configs import BASE_DIR, API_KEY, ACCESS_KEY, SECRET_KEY
 from airflow.models import Variable
 
-from airflow.dag.utils.utils import clean_file, save_to_s3
+from airflow.utils.utils import clean_file, save_to_s3
+# from airflow.tasks.extract_from_api import extract_data_task
 
+
+economic_variables = [
+    "crypto",
+    "forex",
+    "stock_prices"
+]
 
 @task
 def extract_data_task(variable_name:str):
@@ -39,7 +50,8 @@ def extract_data_task(variable_name:str):
         logging.info("Gathering the data from the api...")
         #build the api call
         request = requests.get(
-            f"https://finnhub.io/api/v1/{variable_name}/candle?symbol={symbol}&resolution={resolution}&from={from_timestamp}&to={to_timestamp}&token={api_key}")
+            f"https://finnhub.io/api/v1/{variable_name}/candle?" /
+            f"symbol={symbol}&resolution={resolution}&from={from_timestamp}&to={to_timestamp}&token={api_key}")
         file = request.json()
 
         logging.info("Cleaning the data...")
@@ -53,3 +65,18 @@ def extract_data_task(variable_name:str):
         extracted_files.update({variable_name: file_path})
 
     return extracted_files
+
+@dag(
+dag_id="economic_data_visualization_dag",
+    start_date=datetime(2020, 1, 1),
+    catchup=True,
+    schedule_interval="@daily",
+    max_active_tasks=12,
+    default_args={
+        "retries": 3,
+        "retry_delay": timedelta(minutes=5)})
+def economic_data_visualization_dag():
+    for variable in economic_variables:
+        @task_group(group_id=f"process_{variable}")
+        def process_variable():
+            extract_data_task(variable)
